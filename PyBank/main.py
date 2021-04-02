@@ -6,7 +6,9 @@ totalMonths = 0
 totalProfitLoss = 0
 
 #Variables to calcualte change in P&L
-profitLossChangeDict = {"Date": [], "ProfitLossChange": []}
+dateList = []
+profitLossChangeList = []
+
 previousProfitLoss = 0
 averageProfitLossChange = 0.0
 
@@ -14,7 +16,9 @@ def calculateFinancialAnalysis(budgetData, indexCounter):
     global totalMonths
     global totalProfitLoss
     global previousProfitLoss
-    global profitLossChangeDict
+
+    global dateList
+    global profitLossChangeList
 
     profitAndLoss = int(budgetData[1])
     
@@ -24,31 +28,27 @@ def calculateFinancialAnalysis(budgetData, indexCounter):
     # Net total amount of P&L over the entire period
     totalProfitLoss = totalProfitLoss + profitAndLoss
 
-    
+    dateList.append(str(budgetData[0]))
+
     if(indexCounter == 0):
         previousProfitLoss = 0
-        profitLossChangeDict["Date"].append(str(budgetData[0]))
-        profitLossChangeDict["ProfitLossChange"].append(0)
+        profitLossChangeList.append(0)
     else:
-        profitLossChangeDict["Date"].append(str(budgetData[0]))
-        profitLossChangeDict["ProfitLossChange"].append(int(budgetData[1]) - int(previousProfitLoss))
-
+        profitLossChangeList.append(int(budgetData[1]) - int(previousProfitLoss))
     
     previousProfitLoss = budgetData[1]
 
-def calculateProfitLossChangeAvg(profitLossChanges):
-    global profitLossChangeDict 
+def calculateProfitLossChangeAvg():
+    global profitLossChangeList
 
-    length = len(profitLossChangeDict["ProfitLossChange"])
+    length = len(profitLossChangeList) - 1
     averageProfitLossChange = 0.0
     total = 0.0
     
-    for profitLossChange in profitLossChanges:
+    for profitLossChange in profitLossChangeList:
             total += profitLossChange
 
     return total / length
-
-
 
 
 #Headers to print to text file
@@ -63,17 +63,30 @@ with open(csvpath) as csvfile:
         calculateFinancialAnalysis(row, indexCounter)
         indexCounter += 1
 
-averageProfitLossChange = calculateProfitLossChangeAvg(profitLossChangeDict["ProfitLossChange"])  
-greatestProfitLossIncrease = max(profitLossChangeDict["ProfitLossChange"])
-greatestProfitLossDecrease = min(profitLossChangeDict["ProfitLossChange"])
-
-# print(profitLossChangeDict)
+averageProfitLossChange = calculateProfitLossChangeAvg()  
+greatestProfitLossIncrease = max(profitLossChangeList)
+greatestProfitLossDecrease = min(profitLossChangeList)
 
 totalMonthsTxt = "Total Months:" + str(totalMonths)
-totalProfitLossTxt = "Total:" + str(totalProfitLoss)
-averageChangeTxt = "Average Change:" + str(averageProfitLossChange)
-greatestIncreaseTxt = "Greatest Increase in Profits: " + str(greatestProfitLossIncrease)
-greatestDecreaseTxt = "Greatest Decrease in Profits:: " + str(greatestProfitLossDecrease)
+totalProfitLossTxt = "Total: $" + str(totalProfitLoss)
+averageChangeTxt = "Average Change:" + str(round(averageProfitLossChange, 2))
+
+# valueIndex = greatestProfitLossIncrease["ProfitLossChange"].index()
+greatestIncreaseTxt = "Greatest Increase in Profits: " + str(dateList[profitLossChangeList.index(greatestProfitLossIncrease)]) + " ($" + str(greatestProfitLossIncrease) +  ")"
+greatestDecreaseTxt = "Greatest Decrease in Profits:: " + str(dateList[profitLossChangeList.index(greatestProfitLossDecrease)]) + " ($" + str(greatestProfitLossDecrease)+  ")"
+
+textFilePath = os.path.join("analysis", "analysis.txt")
+
+fileObject = open(textFilePath, "w")
+fileObject.write(headerTxt + "\n")
+fileObject.write(headerTxt2 + "\n")
+fileObject.write(totalMonthsTxt + "\n")
+fileObject.write(totalProfitLossTxt + "\n")        
+fileObject.write(averageChangeTxt + "\n")
+fileObject.write(greatestIncreaseTxt + "\n")
+fileObject.write(greatestDecreaseTxt + "\n")
+fileObject.close()
+
 print(headerTxt)
 print(headerTxt2)
 print(totalMonthsTxt)
